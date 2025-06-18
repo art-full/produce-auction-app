@@ -23,7 +23,7 @@
   <input type="number" id="quantity" placeholder="Quantity" />
   <input type="number" id="unitPrice" placeholder="Unit Price ($)" />
   <input type="file" id="photo" accept="image/*" capture="environment" />
-  <button onclick="addLot()">Add Lot</button>
+  <button id="addBtn">Add Lot</button>
 
   <h2>Lots</h2>
   <div id="lots"></div>
@@ -36,29 +36,48 @@
   <script>
     let lots = [];
 
+    document.getElementById("addBtn").addEventListener("click", addLot);
+
     function addLot() {
       const name = document.getElementById('name').value;
       const quantity = parseInt(document.getElementById('quantity').value);
       const unitPrice = parseFloat(document.getElementById('unitPrice').value);
       const fileInput = document.getElementById('photo');
       const file = fileInput.files[0];
-      if (!name || !quantity || !unitPrice) return alert("Please fill all fields");
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const imageUrl = e.target.result;
-        lots.push({ name, quantity, unitPrice, bidUnit: unitPrice, imageUrl, total: quantity * unitPrice });
-        updateDisplay();
+
+      if (!name || isNaN(quantity) || isNaN(unitPrice)) {
+        alert("Please fill all fields");
+        return;
+      }
+
+      const newLot = {
+        name,
+        quantity,
+        unitPrice,
+        bidUnit: unitPrice,
+        imageUrl: '',
+        total: quantity * unitPrice
       };
+
+      const finalize = () => {
+        lots.push(newLot);
+        updateDisplay();
+        document.getElementById('name').value = '';
+        document.getElementById('quantity').value = '';
+        document.getElementById('unitPrice').value = '';
+        fileInput.value = '';
+      };
+
       if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          newLot.imageUrl = e.target.result;
+          finalize();
+        };
         reader.readAsDataURL(file);
       } else {
-        lots.push({ name, quantity, unitPrice, bidUnit: unitPrice, imageUrl: '', total: quantity * unitPrice });
-        updateDisplay();
+        finalize();
       }
-      document.getElementById('name').value = '';
-      document.getElementById('quantity').value = '';
-      document.getElementById('unitPrice').value = '';
-      fileInput.value = '';
     }
 
     function updateDisplay() {
@@ -95,7 +114,8 @@
 
     function updateBid(index, value) {
       lots[index].bidUnit = parseFloat(value);
-      document.getElementById('unitLabel' + index).textContent = parseFloat(value).toFixed(2);
+      lots[index].total = lots[index].bidUnit * lots[index].quantity;
+      document.getElementById('unitLabel' + index).textContent = lots[index].bidUnit.toFixed(2);
       updateDisplay();
     }
 
@@ -118,7 +138,7 @@
       document.getElementById('budget').value = storedBudget;
       lots = storedLots;
       updateDisplay();
-    }
+    };
   </script>
 </body>
 </html>
