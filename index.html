@@ -1,1 +1,145 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Produce Auction App</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    input, button, select { margin: 0.5rem 0; padding: 0.5rem; width: 100%; }
+    .lot { border: 1px solid #ccc; padding: 1rem; margin: 1rem 0; }
+    img { max-width: 100%; height: auto; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Produce Auction Tracker</h1>
+  <label>Total Budget ($):</label>
+  <input type="number" id="budget" />
+
+  <h2>Add Lot</h2>
+  <input type="text" id="name" placeholder="Item Name" />
+  <input type="number" id="quantity" placeholder="Quantity" />
+  <input type="number" id="unitPrice" placeholder="Unit Price ($)" />
+  <input type="file" id="photo" accept="image/*" capture="environment" />
+  <button id="addBtn">Add Lot</button>
+
+  <h2>Lots</h2>
+  <div id="lots"></div>
+
+  <h3>Total Estimated Spend: $<span id="totalSpent">0</span></h3>
+  <h3>Remaining Budget: $<span id="remaining">0</span></h3>
+
+  <button onclick="exportData()">Export Data</button>
+
+  <script>
+    let lots = [];
+
+    document.getElementById("addBtn").addEventListener("click", addLot);
+
+    function addLot() {
+      const name = document.getElementById('name').value;
+      const quantity = parseInt(document.getElementById('quantity').value);
+      const unitPrice = parseFloat(document.getElementById('unitPrice').value);
+      const fileInput = document.getElementById('photo');
+      const file = fileInput.files[0];
+
+      if (!name || isNaN(quantity) || isNaN(unitPrice)) {
+        alert("Please fill all fields");
+        return;
+      }
+
+      const newLot = {
+        name,
+        quantity,
+        unitPrice,
+        bidUnit: unitPrice,
+        imageUrl: '',
+        total: quantity * unitPrice
+      };
+
+      const finalize = () => {
+        lots.push(newLot);
+        updateDisplay();
+        document.getElementById('name').value = '';
+        document.getElementById('quantity').value = '';
+        document.getElementById('unitPrice').value = '';
+        fileInput.value = '';
+      };
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          newLot.imageUrl = e.target.result;
+          finalize();
+        };
+        reader.readAsDataURL(file);
+      } else {
+        finalize();
+      }
+    }
+
+    function updateDisplay() {
+      const budget = parseFloat(document.getElementById('budget').value) || 0;
+      const lotsContainer = document.getElementById('lots');
+      lotsContainer.innerHTML = '';
+      let totalSpent = 0;
+
+      lots.forEach((lot, index) => {
+        const total = lot.bidUnit * lot.quantity;
+        totalSpent += total;
+
+        const div = document.createElement('div');
+        div.className = 'lot';
+        div.innerHTML = `
+          <strong>${lot.name}</strong><br>
+          Qty: ${lot.quantity}<br>
+          Unit Price: $${lot.unitPrice.toFixed(2)}<br>
+          Bid Unit Price: $<span id="unitLabel${index}">${lot.bidUnit.toFixed(2)}</span><br>
+          <input type="range" min="0" max="${(lot.unitPrice * 2).toFixed(2)}" step="0.01" value="${lot.bidUnit}" 
+                 onchange="updateBid(${index}, this.value)" />
+          Total: $${total.toFixed(2)}<br>
+          ${lot.imageUrl ? '<img src="' + lot.imageUrl + '" />' : ''}
+        `;
+        lotsContainer.appendChild(div);
+      });
+
+      document.getElementById('totalSpent').textContent = totalSpent.toFixed(2);
+      document.getElementById('remaining').textContent = (budget - totalSpent).toFixed(2);
+
+      localStorage.setItem('lots', JSON.stringify(lots));
+      localStorage.setItem('budget', budget);
+    }
+
+    function updateBid(index, value) {
+      lots[index].bidUnit = parseFloat(value);
+      lots[index].total = lots[index].bidUnit * lots[index].quantity;
+      document.getElementById('unitLabel' + index).textContent = lots[index].bidUnit.toFixed(2);
+      updateDisplay();
+    }
+
+    function exportData() {
+      const csv = [
+        ['Name', 'Quantity', 'Unit Price', 'Bid Unit Price', 'Total'],
+        ...lots.map(l => [l.name, l.quantity, l.unitPrice, l.bidUnit, (l.bidUnit * l.quantity)])
+      ].map(r => r.join(",")).join("\n");
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'produce_auction_data.csv';
+      a.click();
+    }
+
+    window.onload = function () {
+      const storedLots = JSON.parse(localStorage.getItem('lots')) || [];
+      const storedBudget = localStorage.getItem('budget') || '';
+      document.getElementById('budget').value = storedBudget;
+      lots = storedLots;
+      updateDisplay();
+    };
+  </script>
+</body>
+</html>
+
