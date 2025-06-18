@@ -27,10 +27,10 @@
   <button id="addBtn">Add Lot</button>
 
   <h2>Lots</h2>
-  <div id="lots"></div>
+  <div id="lots" style="display: flex; flex-direction: column-reverse;"></div>
 
   <h3>Total Estimated Spend: $<span id="totalSpent">0</span></h3>
-  <h3>Remaining Budget: $<span id="remaining">0</span></h3>
+  <h3 id="stickyBudget" style="position:sticky;top:0;background:#fff;padding:0.5rem 0;border-bottom:1px solid #ccc;z-index:100;">Remaining Budget: $<span id="remaining">0</span></h3>
 
   <button onclick="exportData()">Export Data</button>
 
