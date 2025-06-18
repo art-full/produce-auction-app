@@ -28,9 +28,8 @@
   <h2>Lots</h2>
   <div id="lots"></div>
 
-  <h3>Total Min Bids: $<span id="totalMin">0</span></h3>
-  <h3>Total Max Bids: $<span id="totalMax">0</span></h3>
-  <h3>Budget Remaining: $<span id="remaining">0</span></h3>
+  <h3>Total Estimated Spend: $<span id="totalSpent">0</span></h3>
+  <h3>Remaining Budget: $<span id="remaining">0</span></h3>
 
   <button onclick="exportData()">Export Data</button>
 
@@ -44,22 +43,18 @@
       const fileInput = document.getElementById('photo');
       const file = fileInput.files[0];
       if (!name || !quantity || !unitPrice) return alert("Please fill all fields");
-      const total = quantity * unitPrice;
-
       const reader = new FileReader();
       reader.onload = function (e) {
         const imageUrl = e.target.result;
-        lots.push({ name, quantity, unitPrice, total, imageUrl, minBid: 0, maxBid: total });
+        lots.push({ name, quantity, unitPrice, bidUnit: unitPrice, imageUrl });
         updateDisplay();
       };
-
       if (file) {
         reader.readAsDataURL(file);
       } else {
-        lots.push({ name, quantity, unitPrice, total, imageUrl: '', minBid: 0, maxBid: total });
+        lots.push({ name, quantity, unitPrice, bidUnit: unitPrice, imageUrl: '' });
         updateDisplay();
       }
-
       document.getElementById('name').value = '';
       document.getElementById('quantity').value = '';
       document.getElementById('unitPrice').value = '';
@@ -68,47 +63,46 @@
 
     function updateDisplay() {
       const budget = parseFloat(document.getElementById('budget').value) || 0;
-      let totalMin = 0, totalMax = 0;
       const lotsContainer = document.getElementById('lots');
       lotsContainer.innerHTML = '';
+      let totalSpent = 0;
 
       lots.forEach((lot, index) => {
-        totalMin += lot.minBid;
-        totalMax += lot.maxBid;
+        const total = lot.bidUnit * lot.quantity;
+        totalSpent += total;
 
         const div = document.createElement('div');
         div.className = 'lot';
         div.innerHTML = `
           <strong>${lot.name}</strong><br>
           Qty: ${lot.quantity}<br>
-          Unit: $${lot.unitPrice.toFixed(2)}<br>
-          Total: $${lot.total.toFixed(2)}<br>
-          <label>Min Bid: $<span id="minLabel${index}">${lot.minBid.toFixed(2)}</span></label>
-          <input type="range" min="0" max="${lot.total}" step="0.01" value="${lot.minBid}" 
+          Unit Price: $${lot.unitPrice.toFixed(2)}<br>
+          Bid Unit Price: $<span id="unitLabel${index}">${lot.bidUnit.toFixed(2)}</span><br>
+          <input type="range" min="0" max="${(lot.unitPrice * 2).toFixed(2)}" step="0.01" value="${lot.bidUnit}" 
                  onchange="updateBid(${index}, this.value)" />
-          ${lot.imageUrl ? '<br><img src="' + lot.imageUrl + '" />' : ''}
+          Total: $${total.toFixed(2)}<br>
+          ${lot.imageUrl ? '<img src="' + lot.imageUrl + '" />' : ''}
         `;
         lotsContainer.appendChild(div);
       });
 
-      document.getElementById('totalMin').textContent = totalMin.toFixed(2);
-      document.getElementById('totalMax').textContent = totalMax.toFixed(2);
-      document.getElementById('remaining').textContent = (budget - totalMin).toFixed(2);
+      document.getElementById('totalSpent').textContent = totalSpent.toFixed(2);
+      document.getElementById('remaining').textContent = (budget - totalSpent).toFixed(2);
 
       localStorage.setItem('lots', JSON.stringify(lots));
       localStorage.setItem('budget', budget);
     }
 
     function updateBid(index, value) {
-      lots[index].minBid = parseFloat(value);
-      document.getElementById('minLabel' + index).textContent = parseFloat(value).toFixed(2);
+      lots[index].bidUnit = parseFloat(value);
+      document.getElementById('unitLabel' + index).textContent = parseFloat(value).toFixed(2);
       updateDisplay();
     }
 
     function exportData() {
       const csv = [
-        ['Name', 'Quantity', 'Unit Price', 'Total', 'Min Bid', 'Max Bid'],
-        ...lots.map(l => [l.name, l.quantity, l.unitPrice, l.total, l.minBid, l.maxBid])
+        ['Name', 'Quantity', 'Unit Price', 'Bid Unit Price', 'Total'],
+        ...lots.map(l => [l.name, l.quantity, l.unitPrice, l.bidUnit, (l.bidUnit * l.quantity)])
       ].map(r => r.join(",")).join("\n");
 
       const blob = new Blob([csv], { type: 'text/csv' });
