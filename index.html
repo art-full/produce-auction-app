@@ -35,6 +35,7 @@
   </div>
 
   <button onclick="exportData()">Export Data</button>
+<button onclick="resetApp()">Reset</button>
 
   <script>
     let lots = [];
@@ -160,7 +161,16 @@
       a.click();
     }
 
-    window.onload = function () {
+    function resetApp() {
+  if (confirm("Are you sure you want to reset everything?")) {
+    localStorage.clear();
+    lots = [];
+    document.getElementById("budget").value = "";
+    updateDisplay();
+  }
+}
+
+window.onload = function () {
       const storedLots = JSON.parse(localStorage.getItem('lots')) || [];
       const storedBudget = localStorage.getItem('budget') || '';
       document.getElementById('budget').value = storedBudget;
