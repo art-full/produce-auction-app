@@ -45,14 +45,20 @@
   <script>
     let lots = [];
 
-    document.getElementById("addBtn").addEventListener("click", addLot);
+    
+const addBtn = document.getElementById("addBtn");
+addBtn.addEventListener("click", addLot);
+
 
     function addLot() {
       const name = document.getElementById('name').value;
       const quantity = parseInt(document.getElementById('quantity').value);
       const unitPrice = parseFloat(document.getElementById('unitPrice').value);
       const fileInput = document.getElementById('photo');
-      const file = fileInput.files[0];
+      
+const file = fileInput.files[0];
+addBtn.disabled = true;
+
 
       if (!name || isNaN(quantity) || isNaN(unitPrice)) {
         alert("Please fill all fields");
@@ -83,10 +89,12 @@
         const reader = new FileReader();
         reader.onload = function (e) {
           newLot.imageUrl = e.target.result;
-          finalize();
+          addBtn.disabled = false;
+        finalize();
         };
         reader.readAsDataURL(file);
       } else {
+        addBtn.disabled = false;
         finalize();
       }
     }
