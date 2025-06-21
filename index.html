@@ -73,6 +73,7 @@
       
 const finalize = () => {
   
+  localStorage.setItem('lots', JSON.stringify(lots));
   updateDisplay();
   console.log("Added lot:", newLot);
   addBtn.disabled = false;
