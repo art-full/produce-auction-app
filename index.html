@@ -72,9 +72,12 @@
 
       
 const finalize = () => {
+  
+  updateDisplay();
+  console.log("Added lot:", newLot);
   addBtn.disabled = false;
 
-        lots.push(newLot);
+        
         updateDisplay();
         document.getElementById('name').value = '';
         document.getElementById('quantity').value = '';
@@ -82,10 +85,7 @@ const finalize = () => {
         fileInput.value = '';
       };
 
-      
-if (file) {
-  addBtn.disabled = true;
-
+      if (file) {
         const reader = new FileReader();
         reader.onload = function (e) {
           newLot.imageUrl = e.target.result;
