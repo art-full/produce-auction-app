@@ -30,7 +30,7 @@
   <button id="addBtn">Add Lot</button>
 
   <h2>Lots</h2>
-  <div id="lots" style="display: flex; flex-direction: column-reverse; padding-bottom: 4rem;"></div>
+  <div id="lots" style="display: flex; flex-direction: column; padding-bottom: 4rem;"></div>
 
   <h3>Total Estimated Spend: $<span id="totalSpent">0</span></h3>
   <div id="stickyBudget" style="position:fixed;bottom:0;width:100%;background:#fff;padding:0.5rem;border-top:1px solid #ccc;z-index:100;text-align:center;">
@@ -111,7 +111,8 @@ const finalize = () => {
       lotsContainer.innerHTML = '';
       let totalSpent = 0;
 
-      lots.forEach((lot, index) => {
+      lots.slice().reverse().forEach((lot, i) => {
+const index = lots.length - 1 - i;
         const currentBid = lot.locked ? lot.finalUnitBid : lot.bidUnit;
         const total = currentBid * lot.quantity;
         totalSpent += total;
