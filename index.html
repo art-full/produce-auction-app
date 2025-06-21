@@ -45,20 +45,14 @@
   <script>
     let lots = [];
 
-    
-const addBtn = document.getElementById("addBtn");
-addBtn.addEventListener("click", addLot);
-
+    document.getElementById("addBtn").addEventListener("click", addLot);
 
     function addLot() {
       const name = document.getElementById('name').value;
       const quantity = parseInt(document.getElementById('quantity').value);
       const unitPrice = parseFloat(document.getElementById('unitPrice').value);
       const fileInput = document.getElementById('photo');
-      
-const file = fileInput.files[0];
-addBtn.disabled = true;
-
+      const file = fileInput.files[0];
 
       if (!name || isNaN(quantity) || isNaN(unitPrice)) {
         alert("Please fill all fields");
@@ -76,7 +70,10 @@ addBtn.disabled = true;
         total: quantity * unitPrice
       };
 
-      const finalize = () => {
+      
+const finalize = () => {
+  addBtn.disabled = false;
+
         lots.push(newLot);
         updateDisplay();
         document.getElementById('name').value = '';
@@ -85,16 +82,17 @@ addBtn.disabled = true;
         fileInput.value = '';
       };
 
-      if (file) {
+      
+if (file) {
+  addBtn.disabled = true;
+
         const reader = new FileReader();
         reader.onload = function (e) {
           newLot.imageUrl = e.target.result;
-          addBtn.disabled = false;
-        finalize();
+          finalize();
         };
         reader.readAsDataURL(file);
       } else {
-        addBtn.disabled = false;
         finalize();
       }
     }
