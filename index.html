@@ -23,7 +23,10 @@
   <input type="text" id="name" placeholder="Item Name" />
   <input type="number" id="quantity" placeholder="Quantity" />
   <input type="number" id="unitPrice" placeholder="Unit Price ($)" />
-  <input type="file" id="photo" accept="image/*" capture="environment" />
+  
+  <input type="file" id="photo" accept="image/*" capture="environment" style="display:none;" />
+  <button id="cameraBtn" onclick="document.getElementById('photo').click()">📷 Take Photo</button>
+
   <button id="addBtn">Add Lot</button>
 
   <h2>Lots</h2>
@@ -36,6 +39,8 @@
 
   <button onclick="exportData()">Export Data</button>
 <button onclick="resetApp()">Reset</button>
+<button onclick="viewHistory()">View History</button>
+<div id="history" style="display:none;padding-top:1rem;"></div>
 
   <script>
     let lots = [];
@@ -136,7 +141,24 @@
       localStorage.setItem('budget', budget);
     }
 
-    function lockBid(index) {
+    
+function lockBid(index) {
+  lots[index].locked = true;
+  const lot = lots[index];
+  const record = {
+    name: lot.name,
+    quantity: lot.quantity,
+    finalUnitBid: lot.finalUnitBid,
+    total: lot.finalUnitBid * lot.quantity,
+    timestamp: new Date().toISOString(),
+    imageUrl: lot.imageUrl || ''
+  };
+  const history = JSON.parse(localStorage.getItem('history') || '[]');
+  history.push(record);
+  localStorage.setItem('history', JSON.stringify(history));
+  updateDisplay();
+}
+
       lots[index].locked = true;
       updateDisplay();
     }
@@ -170,7 +192,41 @@
   }
 }
 
+
+function viewHistory() {
+  const div = document.getElementById("history");
+  const history = JSON.parse(localStorage.getItem("history") || "[]");
+  if (div.style.display === "none") {
+    div.innerHTML = "<h3>Purchase History</h3>";
+    if (history.length === 0) {
+      div.innerHTML += "<p>No history yet.</p>";
+    } else {
+      history.reverse().forEach(h => {
+        div.innerHTML += `
+          <div style="border-top:1px solid #ccc;margin-top:1rem;padding-top:0.5rem;">
+            <strong>${h.name}</strong> - ${h.quantity} @ $${h.finalUnitBid.toFixed(2)} = $${h.total.toFixed(2)}<br>
+            <small>${new Date(h.timestamp).toLocaleString()}</small><br>
+            ${h.imageUrl ? '<img src="' + h.imageUrl + '" style="max-width:100px;" />' : ''}
+          </div>
+        `;
+      });
+      div.innerHTML += '<button onclick="clearHistory()">Clear History</button>';
+    }
+    div.style.display = "block";
+  } else {
+    div.style.display = "none";
+  }
+}
+
+function clearHistory() {
+  if (confirm("Clear all history?")) {
+    localStorage.removeItem("history");
+    viewHistory();
+  }
+}
+
 window.onload = function () {
+
       const storedLots = JSON.parse(localStorage.getItem('lots')) || [];
       const storedBudget = localStorage.getItem('budget') || '';
       document.getElementById('budget').value = storedBudget;
