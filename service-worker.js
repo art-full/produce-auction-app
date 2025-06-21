@@ -1,19 +1,20 @@
-self.addEventListener('install', function (e) {
-  e.waitUntil(
-    caches.open('produce-auction').then(function (cache) {
-      return cache.addAll([
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open('v1').then(cache =>
+      cache.addAll([
         '/',
         '/index.html',
         '/manifest.json'
-      ]);
-    })
+      ])
+    )
   );
 });
 
-self.addEventListener('fetch', function (e) {
-  e.respondWith(
-    caches.match(e.request).then(function (response) {
-      return response || fetch(e.request);
-    })
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response =>
+      response || fetch(event.request)
+    )
   );
 });
